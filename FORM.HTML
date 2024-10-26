@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Farm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: auto;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background: #5cb85c;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%;
+        }
+        button:hover {
+            background: #4cae4c;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Booking Farm</h1>
+    <form id="bookingForm">
+        <label for="name">Name</label>
+        <input type="text" id="name" required>
+        
+        <label for="contact">Contact Number</label>
+        <input type="text" id="contact" maxlength="10" required>
+
+        <label for="email">Email ID</label>
+        <input type="email" id="email" required>
+
+        <label for="whatsapp">WhatsApp Number</label>
+        <input type="text" id="whatsapp" maxlength="10" required>
+
+        <label for="referral">Referral Code</label>
+        <input type="text" id="referral" required>
+        <span class="error" id="referralError"></span>
+
+        <label for="plan">Plan</label>
+        <select id="plan" required></select>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbweeKivi-DkCbZfQkNFGbiVFwbnk0oQYFOhqryUkVfOgz0WC996BwzPKWRho1l5DA/exec'; // Aapka Google Apps Script URL yahan daalein
+        
+        async function fetchPlans() {
+            const response = await fetch(scriptURL + '?action=getPlans');
+            const plans = await response.json();
+            const planSelect = document.getElementById('plan');
+            plans.forEach(plan => {
+                const option = document.createElement('option');
+                option.value = plan;
+                option.textContent = plan;
+                planSelect.appendChild(option);
+            });
+        }
+
+        async function validateReferralCode(code) {
+            const response = await fetch(scriptURL + '?action=getReferralCodes');
+            const validCodes = await response.json();
+            return validCodes.includes(code);
+        }
+
+        document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const referralCode = document.getElementById('referral').value;
+            const isValidCode = await validateReferralCode(referralCode);
+            const referralError = document.getElementById('referralError');
+
+            if (!isValidCode) {
+                referralError.textContent = "Invalid referral code. Please enter a valid code.";
+                return;
+            } else {
+                referralError.textContent = ""; // Clear error message
+            }
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log('Success!', response);
+                alert('Form submitted successfully!');
+                e.target.reset();
+            })
+            .catch(error => console.error('Error!', error.message));
+        });
+
+        window.onload = fetchPlans;
+    </script>
+</body>
+</html>
+S
